@@ -1,16 +1,8 @@
-<<<<<<< HEAD
-# Contributors to the Simple Shell Project
-
-This repository contains the simple shell project, and it has been authored by two developers; nyaliti & jude
-
-##Nyaliti
-=======
 > # Contributors to the Simple Shell Project
 
 This repository contains the simple shell project, and it has been authored by two developers; nyaliti & jude
 
 **Nyaliti**
->>>>>>> master
 
 - Github: [Nyaliti](https://github.com/nyaliti)
 
@@ -22,11 +14,7 @@ This repository contains the simple shell project, and it has been authored by t
 
 
 
-<<<<<<< HEAD
-##Jude
-=======
 **Jude**
->>>>>>> master
 
 - Github: [Judhunja](https://github.com/Judhunja)
 
