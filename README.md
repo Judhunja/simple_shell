@@ -41,9 +41,6 @@ git clone https://github.com/your-username/simple_shell.git
 ``gcc -Wall -Werror -Wextra -pedantic *.c -o shell``
 
 3. Run the shell:
-<<<<<<< HEAD
-
-=======
 ### Output
 
 -   Unless specified otherwise, your program **must have the exact same output** as `sh` (`/bin/sh`) as well as the exact same error output.
