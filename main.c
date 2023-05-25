@@ -1,92 +1,61 @@
 #include "holberton.h"
-
 /**
- * free_data - frees data structure
- *
- * @datash: data structure
- *
- * This function frees the data structure pointed to by datash.
+ * main -start of the function
+ * Return: 0
  */
-void free_data(data_shell *datash)
+int main(void)
 {
-	unsigned int z;
+	int exit_status_no = 0;
 
-	/* Iterate over the environment variables and free them. */
-	for (z = 0; datash->_environ[z]; z++) {
-		free(datash->_environ[z]);
-	}
+	shell_loop(&exit_status_no);
 
-	/* Free the environment variable array and the process ID. */
-	free(datash->_environ);
-	free(datash->pid);
+	return (0);
 }
 
 /**
- * set_data - Initialize data structure
- *
- * @datash: data structure
- * @av: argument vector
- *
- * This function initializes the data structure pointed to by datash.
+ * exec_command - fork and execute the given command
+ * @args: array of arguments (including the command) to execute
+ * Return: exit status no of the executed command
  */
-void set_data(data_shell *datash, char **av)
+
+int exec_command(char **args)
 {
-	unsigned int z;
+	char errormsg[] = "Command not found.\n";
+	char errormsg_fork[] = "Failed to fork.\n";
+	pid_t pid;
+	int status;
+	int exit_status_no = 0;
 
-	/* Set the argument vector, input, arguments, status, and counter members of datash. */
-	datash->av = av;
-	datash->input = NULL;
-	datash->args = NULL;
-	datash->status = 0;
-	datash->counter = 1;
+	pid = fork();
+	if (pid == 0)
+	{
+		execvp(args[0], args);
+		if (errno == ENOENT)
+		{
+			char errormsg_file[] = "./hsh: 0: Can't open ";
 
-	/* Iterate over the environment variables and count them. */
-	while (environ[z]) {
-		z++;
+			write(STDERR_FILENO, errormsg_file, sizeof(errormsg_file) - 1);
+			write(STDERR_FILENO, args[0], strlen(args[0]));
+			write(STDERR_FILENO, "\n", 1);
+			exit(127);
+		}
+		else
+		{
+			write(STDERR_FILENO, errormsg, sizeof(errormsg));
+			exit(127);
+		}
+	}
+	else if (pid < 0)
+	{
+		write(STDERR_FILENO, errormsg_fork, sizeof(errormsg_fork));
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		wait(&status);
+		if (WIFEXITED(status))
+			exit_status_no = WEXITSTATUS(status);
 	}
 
-	/* Allocate memory for an array of environment variables and copy the environment variables to the array. */
-	datash->_environ = malloc(sizeof(char *) * (z + 1));
-
-	for (z = 0; environ[z]; z++) {
-		datash->_environ[z] = _strdup(environ[z]);
-	}
-
-	/* Set the last element of the environment variable array to NULL. */
-	datash->_environ[z] = NULL;
-
-	/* Get the process ID and store it in the pid member of datash. */
-	datash->pid = aux_itoa(getpid());
+	return (exit_status_no);
 }
-
-/**
- * main - Entry point
- *
- * @ac: argument count
- * @av: argument vector
- *
- * This function is the entry point for the program.
- *
- * Returns: 0 on success.
- */
-int main(int ac, char **av)
-{
-	data_shell datash;
-	(void) ac;
-
-	/* Set the signal handler for SIGINT. */
-	signal(SIGINT, get_sigint);
-
-	/* Initialize the data structure. */
-	set_data(&datash, av);
-
-	/* Run the shell loop. */
-	shell_loop(&datash);
-
-	/* Free the data structure. */
-	free_data(&datash);
-
-	/* Return the status of the shell loop. */
-	return (datash.status);
-}
-

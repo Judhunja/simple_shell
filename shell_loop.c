@@ -1,91 +1,50 @@
+#include "holberton.h"
 /**
- * without_comment - Deletes comments from the input string.
- * @in: Input string.
- * Return: Input string without comments.
- *
- * This function removes comments from the input string. It iterates through
- * each character of the input string and checks if it corresponds to a '#'
- * character. If it does, it checks if the '#' is at the beginning of the
- * string or if the character before '#' is a space, tab, or semicolon. If
- * either condition is met, it marks the position of the '#' character as the
- * end of the input string and truncates the input string there. The modified
- * input string without comments is returned.
+ * shell_loop - main shell loop
+ * @exit_status_no: exit status number returned by the function
  */
-char *without_comment(char *in)
+void shell_loop(int *exit_status_no)
 {
-	int i, up_to;
+	char prompt[MAX_INPUT_LENGTH];
+	char *args[MAX_INPUT_LENGTH / 2 + 1];
+	int display_prompt = isatty(STDIN_FILENO);
+	int quotes;
+	char *commnt_start, previous_char, *k;
 
-	up_to = 0;
-	for (i = 0; in[i]; i++)
+	while (1)
 	{
-		if (in[i] == '#')
+		if (display_prompt)
+			write(STDOUT_FILENO, "#cisfun$ ", 9);
+		if (fgets(prompt, MAX_INPUT_LENGTH, stdin) == NULL)
+			break;
+		quotes = 0;
+		previous_char = '\0';
+		commnt_start = NULL;
+		for (k = prompt; *k != '\0'; ++k)
 		{
-			if (i == 0)
+			if (*k == '"' && previous_char != '\\')
+				quotes = !quotes;
+			else if (*k == '#' && !quotes && previous_char != '\\')
 			{
-				free(in);
-				return (NULL);
+				commnt_start = k;
+				break;
 			}
-
-			if (in[i - 1] == ' ' || in[i - 1] == '\t' || in[i - 1] == ';')
-				up_to = i;
+			previous_char = *k;
 		}
-	}
-
-	if (up_to != 0)
-	{
-		in = _realloc(in, i, up_to + 1);
-		in[up_to] = '\0';
-	}
-
-	return (in);
-}
-
-/**
- * shell_loop - Main loop of the shell.
- * @datash: Data structure containing relevant information.
- * Return: No return.
- *
- * This function represents the main loop of the shell. It continuously prompts
- * for user input, reads the input string, and performs various operations on it.
- * It calls the read_line function to read the input string, then uses without_comment
- * to remove any comments from the input. If the input is valid, it checks for
- * syntax errors using the check_syntax_error function. If there are no syntax errors,
- * it replaces variables using rep_var and splits the commands using split_commands.
- * The loop continues until an end-of-file condition is encountered, indicated by i_eof
- * being -1. The function updates the counter and frees the input string at each iteration.
- */
-void shell_loop(data_shell *datash)
-{
-	int loop, i_eof;
-	char *input;
-
-	loop = 1;
-	while (loop == 1)
-	{
-		write(STDIN_FILENO, "^-^ ", 4);
-		input = read_line(&i_eof);
-		if (i_eof != -1)
+		if (commnt_start != NULL)
+			*commnt_start = '\0';
+		prompt[strcspn(prompt, "\n")] = '\0';
+		input_parser(prompt, args);
+		if (args[0] == NULL)
+			continue;
+		if (_strcmp(args[0], "exit") == 0)
+			return;
+		if (_strcmp(args[0], "env") == 0)
 		{
-			input = without_comment(input);
-			if (input == NULL)
-				continue;
-
-			if (check_syntax_error(datash, input) == 1)
-			{
-				datash->status = 2;
-				free(input);
-				continue;
-			}
-			input = rep_var(input, datash);
-			loop = split_commands(datash, input);
-			datash->counter += 1;
-			free(input);
+			print_env();
+			continue;
 		}
-		else
-		{
-			loop = 0;
-			free(input);
-		}
+		*exit_status_no = exec_command(args);
 	}
 }
 
